@@ -85,6 +85,7 @@ void IAVCom::CopyCodec(AVCodecParameters* dst, const AVCodecParameters* src)
 {
 	if (avcodec_parameters_copy(dst, src) < 0)
 		throw exception("Can not copy codec");
+	dst->codec_tag = 0;
 }
 
 void IAVCom::WriteHeader(AVFormatContext* pCtx, AVDictionary* opts)
