@@ -5,6 +5,9 @@
 typedef const char* LPCSTR;
 #endif // !LPCSTR
 
+// callback
+typedef void (*FRAMECALLBACK)(int64_t);
+
 //DLL EXPORT
 #ifdef DLL_EXPORT
 #define DLL_API		__declspec(dllexport)

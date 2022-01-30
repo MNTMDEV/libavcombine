@@ -30,33 +30,27 @@ AVFormatContext* IAVCom::OpenMediaOutput(LPCSTR fileName)
 	return pCtx;
 }
 
-void IAVCom::QueryStream(AVFormatContext* pCtx, AVMediaType type, AVCodecParameters** ppCodec, int* pIndex)
+AVStream* IAVCom::QueryStream(AVFormatContext* pCtx, AVMediaType type)
 {
-	*ppCodec = NULL;
-	*pIndex = -1;
 	for (int i = 0; i < pCtx->nb_streams; i++)
 	{
 		AVCodecParameters* pLocalCodecParameters = NULL;
-		pLocalCodecParameters = pCtx->streams[i]->codecpar;
+		AVStream* pStream = pCtx->streams[i];
+		pLocalCodecParameters = pStream->codecpar;
 		if (pLocalCodecParameters->codec_type == type) {
-			if (*pIndex == -1) {
-				*pIndex = i;
-				*ppCodec = pLocalCodecParameters;
-				break;
-			}
+			return pStream;
 		}
 	}
-	if (*pIndex == -1) {
-		throw exception("No compatible stream found.");
-	}
+	return NULL;
 }
 
-void IAVCom::StreamCopy(AVFormatContext* in_ctx, int in_index, AVFormatContext* out_ctx, int out_index)
+int64_t IAVCom::StreamCopy(AVFormatContext* in_ctx, int in_index, AVFormatContext* out_ctx, int out_index, FRAMECALLBACK callback)
 {
 	AVStream* in_stream = in_ctx->streams[in_index];
 	AVStream* out_stream = out_ctx->streams[out_index];
 	AVPacket packet;
 	//output each packet
+	int64_t count = 0;
 	while (true) {
 		if (av_read_frame(in_ctx, &packet) < 0)
 			break;
@@ -73,7 +67,24 @@ void IAVCom::StreamCopy(AVFormatContext* in_ctx, int in_index, AVFormatContext* 
 			break;
 		}
 		av_packet_unref(&packet);
+		count++;
+		if (callback) {
+			callback(count);
+		}
 	}
+	return count;
+}
+
+int64_t IAVCom::StreamFrames(AVFormatContext* in_ctx, int in_index)
+{
+	AVStream* in_stream = in_ctx->streams[in_index];
+	AVPacket packet;
+	while (true) {
+		if (av_read_frame(in_ctx, &packet) < 0)
+			break;
+	}
+	av_seek_frame(in_ctx, in_index, 0, AVSEEK_FLAG_ANY);
+	return in_stream->nb_index_entries;
 }
 
 AVStream* IAVCom::AppendStream(AVFormatContext* pCtx)

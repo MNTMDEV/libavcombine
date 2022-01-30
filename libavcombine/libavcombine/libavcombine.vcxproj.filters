@@ -44,5 +44,8 @@
     <ClCompile Include="IAVCom.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="python-api.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
