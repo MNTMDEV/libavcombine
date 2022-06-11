@@ -54,8 +54,10 @@ int64_t IAVCom::StreamCopy(AVFormatContext* in_ctx, int in_index, AVFormatContex
 	while (true) {
 		if (av_read_frame(in_ctx, &packet) < 0)
 			break;
-		if (packet.stream_index != in_index)
+		if (packet.stream_index != in_index) {
+			av_packet_unref(&packet);
 			continue;
+		}
 		//copy packet
 		packet.stream_index = out_stream->index;
 		packet.pts = av_rescale_q_rnd(packet.pts, in_stream->time_base, out_stream->time_base, (AVRounding)(AV_ROUND_NEAR_INF | AV_ROUND_NEAR_INF));
@@ -82,8 +84,9 @@ int64_t IAVCom::StreamFrames(AVFormatContext* in_ctx, int in_index)
 	while (true) {
 		if (av_read_frame(in_ctx, &packet) < 0)
 			break;
+		av_packet_unref(&packet);
 	}
-	av_seek_frame(in_ctx, in_index, 0, AVSEEK_FLAG_ANY);
+	av_seek_frame(in_ctx, -1, 0, AVSEEK_FLAG_ANY);
 	return in_stream->nb_index_entries;
 }
 
